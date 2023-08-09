@@ -1,11 +1,12 @@
 import cv2
 import os
 from tqdm import tqdm
+import gradio as gr
 
-def process_video(input_video, left_bound, upper_bound, right_bound, buttom_bound,output_codec, output_format):
+def process_video(input_video, left_bound, upper_bound, right_bound, buttom_bound,output_codec, output_format, progress=gr.Progress()):
     # 調用 video_processor.py 中的函數處理影片
     print(input_video, left_bound)
-    cropped_video_path = crop_video(input_video, left_bound, upper_bound, right_bound, buttom_bound,output_codec, output_format)
+    cropped_video_path = crop_video(input_video, left_bound, upper_bound, right_bound, buttom_bound,output_codec, output_format, progress)
     
     # 回傳結果
     return cropped_video_path
@@ -36,7 +37,7 @@ def get_meta_from_video(input_video):
     first_frame = cv2.cvtColor(first_frame, cv2.COLOR_BGR2RGB)
     return first_frame, first_frame
 
-def crop_video(input_video, left, top, right, bottom, codec, extension):
+def crop_video(input_video, left, top, right, bottom, codec, extension, progress):
     # 讀取影片
     cap = cv2.VideoCapture(input_video)
     
@@ -44,6 +45,7 @@ def crop_video(input_video, left, top, right, bottom, codec, extension):
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
+    num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
 
     top, bottom, left, right = int(top*height), int(bottom*height), int(left*width), int(right*width)
@@ -67,7 +69,7 @@ def crop_video(input_video, left, top, right, bottom, codec, extension):
     output_path = os.path.join("uploads", "cropped_video" + extension)
     out = cv2.VideoWriter(output_path, codecs[codec], fps, (cropped_width, cropped_height))
     
-
+    cnt = 0
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -78,6 +80,12 @@ def crop_video(input_video, left, top, right, bottom, codec, extension):
 
         # 寫入 output
         out.write(cropped_frame)
+
+
+        if cnt % 10 == 0:
+            progress(cnt / num, desc="Cropping Video")
+        
+        cnt += 1
 
     cap.release()
     out.release()
