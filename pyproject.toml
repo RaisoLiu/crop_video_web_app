@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "crop-video-web-app"
+version = "0.1.0"
+description = ""
+authors = ["raiso <rainsoon717@gmail.com>"]
+readme = "README.md"
+packages = [{include = "crop_video_web_app"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+gradio = "^3.39.0"
+opencv-python = "^4.8.0.74"
+plotly = "^5.15.0"
+bs4 = "^0.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
