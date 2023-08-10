@@ -32,7 +32,7 @@ with app:
             with gr.Tab(label="Video type input"):
                 input_video = gr.Video(label='Input video', height=550)
             with gr.Tab(label="Image-Seq type input"):
-                input_img_seq = gr.File(label='Input Image-Seq', height=550)
+                input_img_seq = gr.File(label='Input Image-Seq')
 
             with gr.Row():
                 left_bound = gr.Slider(label="左邊界",
@@ -116,5 +116,5 @@ with app:
 
 if __name__ == "__main__":
     app.queue(concurrency_count=5)
-    app.launch(debug=True, enable_queue=True, share=False,
-               server_name="0.0.0.0", server_port=10001)
+    app.launch(debug=True, share=False,
+               server_name="0.0.0.0", server_port=10001).queue()
