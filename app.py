@@ -57,7 +57,7 @@ with app:
 
         with gr.Column(scale=0.5):
             result_frame = gr.Image(
-                label='Crop result of first frame', interactive=True, height=550)
+                label='Crop result of first frame', height=550)
 
             output_btn = gr.Button("Export Crop Video", interactive=True)
 

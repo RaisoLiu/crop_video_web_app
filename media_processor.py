@@ -17,6 +17,9 @@ def process_video(input_video, input_img_seq, input_file_type, left_bound, upper
 
 
 def crop_frame(origin_frist_frame, left_bound, upper_bound, right_bound, buttom_bound):
+    if left_bound == None or upper_bound == None or right_bound == None or buttom_bound == None:
+        return None
+
     h, w, _ = origin_frist_frame.shape
 
     if left_bound < 0 or left_bound >= right_bound or right_bound > 1:
@@ -47,7 +50,7 @@ def get_meta_from_video(input_video):
 def crop_video(input_video, left, top, right, bottom, codec, extension, progress):
     # 讀取影片
     cap = cv2.VideoCapture(input_video)
-    file_name = input_video.name.split('/')[-1].split('.')[0]
+    file_name = input_video.split('/')[-1].split('.')[0]
 
     # 獲取影片屬性
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -68,8 +71,9 @@ def crop_video(input_video, left, top, right, bottom, codec, extension, progress
     # 計算剪裁後的尺寸
     cropped_width = (right - left)
     cropped_height = (bottom - top)
-    print(cropped_width, cropped_height)
+
     # 建立 VideoWriter 物件
+    os.makedirs("uploads", exist_ok=True)
     output_path = os.path.join("uploads", file_name + extension)
     out = cv2.VideoWriter(
         output_path, codecs[codec], fps, (cropped_width, cropped_height))
@@ -99,9 +103,9 @@ def crop_video(input_video, left, top, right, bottom, codec, extension, progress
 
 def get_meta_from_img_seq(input_img_seq):
     if input_img_seq is None:
-        return None, None
+        return None, None, None
 
-    print("get meta information of img seq")
+
     # Create dir
     file_name = input_img_seq.name.split('/')[-1].split('.')[0]
     file_path = f'./assets/{file_name}'
@@ -109,7 +113,7 @@ def get_meta_from_img_seq(input_img_seq):
         os.system(f'rm -r {file_path}')
     os.makedirs(file_path)
     # Unzip file
-    os.system(f'unzip {input_img_seq.name} -d ./assets ')
+    os.system(f'unzip -qo {input_img_seq.name} -d ./assets ')
 
     imgs_path = sorted([os.path.join(file_path, img_name)
                        for img_name in os.listdir(file_path)])
@@ -151,7 +155,7 @@ def crop_imgs(input_file, left, top, right, bottom, codec, extension, progress):
     cropped_width = (right - left)
     cropped_height = (bottom - top)
     # 建立 VideoWriter 物件
-    output_path = os.path.join("uploads", "cropped_video" + extension)
+    output_path = os.path.join("uploads", file_name + extension)
     out = cv2.VideoWriter(
         output_path, codecs[codec], fps, (cropped_width, cropped_height))
 
