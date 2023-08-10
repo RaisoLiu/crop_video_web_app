@@ -41,17 +41,17 @@ with app:
                 right_bound = gr.Slider(label="右邊界",
                                         minimum=0, step=0.05, maximum=1,
                                         value=1., interactive=True)
-              
+
             with gr.Row():
                 upper_bound = gr.Slider(label="上邊界",
                                         minimum=0, step=0.05, maximum=1,
                                         value=0., interactive=True)
-                buttom_bound = gr.Slider(label="下邊界",
+                bottom_bound = gr.Slider(label="下邊界",
                                          minimum=0, step=0.05, maximum=1,
                                          value=1., interactive=True)
             with gr.Row():
                 output_codec = gr.Dropdown(
-                    choices=["H264", "FFV1", "MJPG"], label="編碼選擇", value="H264", interactive=True)
+                    choices=["MP4V", "AVC1", "FFV1", "MJPG"], label="編碼選擇", value="AVC1", interactive=True)
                 output_format = gr.Dropdown(
                     choices=[".mp4", ".avi"], label="檔案副檔名", value=".mp4", interactive=True)
 
@@ -59,10 +59,10 @@ with app:
             result_frame = gr.Image(
                 label='Crop result of first frame', height=550)
 
-            output_btn = gr.Button("Export Crop Video", interactive=True)
+            output_btn = gr.Button("Processing video", interactive=True)
 
-            output_file = gr.File(label="下載剪裁後的影片")
-            clean_btn = gr.Button("Clean Temp File", interactive=True)
+            output_file = gr.File(label="Download processed video")
+            clean_btn = gr.Button("Clean temporary files", interactive=True)
 
     # Back-end
     input_video.change(
@@ -85,11 +85,11 @@ with app:
         ]
     )
 
-    for it in [result_frame, left_bound, upper_bound, right_bound, buttom_bound]:
+    for it in [result_frame, left_bound, right_bound, upper_bound, bottom_bound]:
         it.change(
             fn=crop_frame,
             inputs=[
-                origin_frist_frame, left_bound, upper_bound, right_bound, buttom_bound
+                origin_frist_frame, left_bound, right_bound, upper_bound, bottom_bound
             ],
             outputs=[
                 result_frame
@@ -99,7 +99,7 @@ with app:
     output_btn.click(
         fn=process_video,
         inputs=[
-            input_video, input_img_seq, input_file_type, left_bound, upper_bound, right_bound, buttom_bound, output_codec, output_format,
+            input_video, input_img_seq, input_file_type, left_bound, right_bound, upper_bound, bottom_bound, output_codec, output_format,
         ],
         outputs=[
             output_file

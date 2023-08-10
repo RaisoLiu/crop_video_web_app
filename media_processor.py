@@ -1,42 +1,22 @@
-import cv2
 import os
+import cv2
 import gradio as gr
 
 
-def process_video(input_video, input_img_seq, input_file_type, left_bound, upper_bound, right_bound, buttom_bound, output_codec, output_format, progress=gr.Progress()):
+def process_video(input_video, input_img_seq, input_file_type, left, right, top, bottom, output_codec, output_format, progress=gr.Progress()):
     cropped_video_path = ""
 
     if input_file_type == "video":
-        cropped_video_path = crop_video(input_video, left_bound, upper_bound,
-                                        right_bound, buttom_bound, output_codec, output_format, progress)
+        cropped_video_path = crop_video(input_video, left, right, top, bottom, output_codec, output_format, progress)
     if input_file_type == "imgs":
-        cropped_video_path = crop_imgs(input_img_seq, left_bound, upper_bound,
-                                       right_bound, buttom_bound, output_codec, output_format, progress)
+        cropped_video_path = crop_imgs(input_img_seq, left, right, top, bottom, output_codec, output_format, progress)
 
     return cropped_video_path
 
 
-def crop_frame(origin_frist_frame, left_bound, upper_bound, right_bound, buttom_bound):
-    if left_bound == None or upper_bound == None or right_bound == None or buttom_bound == None:
-        return None
-
-    h, w, _ = origin_frist_frame.shape
-
-    if left_bound < 0 or left_bound >= right_bound or right_bound > 1:
-        gr.Error("[E] left_bound or right_bound")
-        return None
-    if upper_bound < 0 and upper_bound >= buttom_bound and buttom_bound > 1:
-        gr.Error("[E] upper_bound or buttom_bound")
-        return None
-
-    left_bound, upper_bound, right_bound, buttom_bound = int(
-        left_bound*w), int(upper_bound*h), int(right_bound*w), int(buttom_bound*h)
-    return origin_frist_frame[upper_bound:buttom_bound, left_bound:right_bound]
-
-
 def get_meta_from_video(input_video):
     if input_video is None:
-        return None, None
+        return None, None, None
 
     cap = cv2.VideoCapture(input_video)
 
@@ -47,64 +27,9 @@ def get_meta_from_video(input_video):
     return first_frame, first_frame, "video"
 
 
-def crop_video(input_video, left, top, right, bottom, codec, extension, progress):
-    # 讀取影片
-    cap = cv2.VideoCapture(input_video)
-    file_name = input_video.split('/')[-1].split('.')[0]
-
-    # 獲取影片屬性
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
-    num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    top, bottom, left, right = int(
-        top*height), int(bottom*height), int(left*width), int(right*width)
-
-    # 定義編碼方式
-    codecs = {
-        "H264": cv2.VideoWriter_fourcc(*"H264"),
-        "FFV1": cv2.VideoWriter_fourcc(*"FFV1"),
-        "MJPG": cv2.VideoWriter_fourcc(*"MJPG")
-    }
-
-    # 計算剪裁後的尺寸
-    cropped_width = (right - left)
-    cropped_height = (bottom - top)
-
-    # 建立 VideoWriter 物件
-    os.makedirs("uploads", exist_ok=True)
-    output_path = os.path.join("uploads", file_name + extension)
-    out = cv2.VideoWriter(
-        output_path, codecs[codec], fps, (cropped_width, cropped_height))
-
-    cnt = 0
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # 剪裁 frame
-        cropped_frame = frame[top:bottom, left:right]
-
-        # 寫入 output
-        out.write(cropped_frame)
-
-        if cnt % 10 == 0:
-            progress(cnt / num, desc="Cropping Video")
-
-        cnt += 1
-
-    cap.release()
-    out.release()
-
-    return output_path
-
-
 def get_meta_from_img_seq(input_img_seq):
     if input_img_seq is None:
         return None, None, None
-
 
     # Create dir
     file_name = input_img_seq.name.split('/')[-1].split('.')[0]
@@ -124,55 +49,73 @@ def get_meta_from_img_seq(input_img_seq):
     return first_frame, first_frame, "imgs"
 
 
-def crop_imgs(input_file, left, top, right, bottom, codec, extension, progress):
-    # 讀取影片
-    file_name = input_file.name.split('/')[-1].split('.')[0]
-    file_path = f'./assets/{file_name}'
+def crop_frame(origin_frist_frame, left, right, top, bottom):
+    if not check_bounds(left, right, top, bottom):
+        gr.Error("[E] Bounding out of range")
+        return None
 
-    imgs_path = sorted([os.path.join(file_path, img_name)
-                       for img_name in os.listdir(file_path)])
+    height, width, _ = origin_frist_frame.shape
 
-    first_frame = imgs_path[0]
-    first_frame = cv2.imread(first_frame)
-    first_frame = cv2.cvtColor(first_frame, cv2.COLOR_BGR2RGB)
+    left, right = int(left*width), int(right*width)
+    top, bottom = int(top*height), int(bottom*height)
+    return origin_frist_frame[top:bottom, left:right]
 
-    # 獲取影片屬性
-    height, width, _ = first_frame.shape
-    fps = 30
-    num = len(imgs_path)
 
-    top, bottom, left, right = int(
-        top*height), int(bottom*height), int(left*width), int(right*width)
+def check_bounds(left, right, top, bottom):
+    if any(val is None for val in [left, right, top, bottom]):
+        return False
+    if not (0 <= left < right <= 1) or not (0 <= top < bottom <= 1):
+        return False
+    return True
 
-    # 定義編碼方式
+
+def get_codec(codec):
     codecs = {
-        "H264": cv2.VideoWriter_fourcc(*"H264"),
+        "MP4V": cv2.VideoWriter_fourcc(*"mp4v"),
+        "H264": cv2.VideoWriter_fourcc(*"h264"),
+        "AVC1": cv2.VideoWriter_fourcc(*"avc1"),
         "FFV1": cv2.VideoWriter_fourcc(*"FFV1"),
         "MJPG": cv2.VideoWriter_fourcc(*"MJPG")
     }
+    return codecs.get(codec)
 
-    # 計算剪裁後的尺寸
-    cropped_width = (right - left)
-    cropped_height = (bottom - top)
-    # 建立 VideoWriter 物件
+
+def process_frames(frames, left, right, top, bottom, codec, extension, progress):
+    # Calculate cropped dimensions
+    height, width, _ = frames[0].shape
+    left, right = int(left*width), int(right*width)
+    top, bottom = int(top*height), int(bottom*height)
+    cropped_width, cropped_height = right - left, bottom - top
+
+    # Prepare VideoWriter
+    os.makedirs("uploads", exist_ok=True)
+    file_name = frames[0].name.split(
+        '/')[-1].split('.')[0] if hasattr(frames[0], 'name') else "output"
     output_path = os.path.join("uploads", file_name + extension)
-    out = cv2.VideoWriter(
-        output_path, codecs[codec], fps, (cropped_width, cropped_height))
+    out = cv2.VideoWriter(output_path, get_codec(
+        codec), 30, (cropped_width, cropped_height))
 
-    for i in range(num):
-        frame = imgs_path[i]
-        frame = cv2.imread(frame)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # 剪裁 frame
+    # Process frames
+    for i, frame in enumerate(frames):
         cropped_frame = frame[top:bottom, left:right]
-
-        # 寫入 output
         out.write(cropped_frame)
-
         if i % 10 == 0:
-            progress(i / num, desc="Cropping Video")
-
+            progress(i / len(frames), desc="Cropping Video")
     out.release()
-
     return output_path
+
+
+def crop_video(input_video, left, right, top, bottom, codec, extension, progress):
+    cap = cv2.VideoCapture(input_video)
+    frames = [cap.read()[1]
+              for _ in range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))]
+    return process_frames(frames, left, right, top, bottom, codec, extension, progress)
+
+
+def crop_imgs(input_file, left, right, top, bottom, codec, extension, progress):
+    file_path = f'./assets/{input_file.name.split("/")[-1].split(".")[0]}'
+    img_paths = sorted([os.path.join(file_path, img_name)
+                       for img_name in os.listdir(file_path)])
+    frames = [cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
+              for img_path in img_paths]
+    return process_frames(frames, left, right, top, bottom, codec, extension, progress)
