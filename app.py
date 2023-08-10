@@ -1,8 +1,14 @@
 import gradio as gr
 import cv2
 import os
-from media_processor import get_meta_from_video, crop_frame, process_video
+from media_processor import get_meta_from_video, crop_frame, process_video, get_meta_from_img_seq
 
+
+def clean_temp():
+    os.system(f'rm -r ./assets/*')
+    os.system(f'rm ./uploads/*')
+
+    return None, None
 
 
 # 定義 Gradio 的介面
@@ -10,41 +16,53 @@ app = gr.Blocks()
 with app:
     # Variable
     origin_frist_frame = gr.State(None)
+    input_file_type = gr.State(None)
     gr.Markdown(
-                '''
+        '''
                 <div style="text-align:center;">
                     <span style="font-size:3em; font-weight:bold;">Crop fix position video</span>
                 </div>
                 '''
-            )
+    )
 
     # Front-end
     with gr.Row():
 
         with gr.Column(scale=0.5):
-            input_video = gr.Video(label='Input video',height=550)
+            with gr.Tab(label="Video type input"):
+                input_video = gr.Video(label='Input video', height=550)
+            with gr.Tab(label="Image-Seq type input"):
+                input_img_seq = gr.File(label='Input Image-Seq', height=550)
+
             with gr.Row():
-                left_bound = gr.Slider(label = "左邊界",
-                                    minimum= 0,step=0.05,maximum=1,
-                                        value=0.1,interactive=True)
-                upper_bound = gr.Slider(label = "上邊界",
-                                        minimum= 0,step=0.05,maximum=1,
-                                        value=0.1,interactive=True)
+                left_bound = gr.Slider(label="左邊界",
+                                       minimum=0, step=0.05, maximum=1,
+                                       value=0., interactive=True)
+                right_bound = gr.Slider(label="右邊界",
+                                        minimum=0, step=0.05, maximum=1,
+                                        value=1., interactive=True)
+              
             with gr.Row():
-                right_bound = gr.Slider(label = "右邊界",
-                                        minimum= 0,step=0.05,maximum=1,
-                                        value=0.9,interactive=True)
-                buttom_bound = gr.Slider(label = "下邊界",
-                                        minimum= 0,step=0.05,maximum=1,
-                                        value=0.9,interactive=True)
+                upper_bound = gr.Slider(label="上邊界",
+                                        minimum=0, step=0.05, maximum=1,
+                                        value=0., interactive=True)
+                buttom_bound = gr.Slider(label="下邊界",
+                                         minimum=0, step=0.05, maximum=1,
+                                         value=1., interactive=True)
             with gr.Row():
-                output_codec = gr.Dropdown(choices=["H264", "FFV1", "MJPG"], label="編碼選擇",value="H264", interactive=True)
-                output_format = gr.Dropdown(choices=[".mp4", ".avi"], label="檔案副檔名", value=".mp4", interactive=True)
+                output_codec = gr.Dropdown(
+                    choices=["H264", "FFV1", "MJPG"], label="編碼選擇", value="H264", interactive=True)
+                output_format = gr.Dropdown(
+                    choices=[".mp4", ".avi"], label="檔案副檔名", value=".mp4", interactive=True)
 
         with gr.Column(scale=0.5):
-            result_frame = gr.Image(label='Crop result of first frame',interactive=True, height=550)
+            result_frame = gr.Image(
+                label='Crop result of first frame', interactive=True, height=550)
+
             output_btn = gr.Button("Export Crop Video", interactive=True)
+
             output_file = gr.File(label="下載剪裁後的影片")
+            clean_btn = gr.Button("Clean Temp File", interactive=True)
 
     # Back-end
     input_video.change(
@@ -53,11 +71,21 @@ with app:
             input_video,
         ],
         outputs=[
-            origin_frist_frame, result_frame
+            origin_frist_frame, result_frame, input_file_type
         ]
     )
 
-    for it in [result_frame,left_bound,upper_bound, right_bound,buttom_bound]:
+    input_img_seq.change(
+        fn=get_meta_from_img_seq,
+        inputs=[
+            input_img_seq,
+        ],
+        outputs=[
+            origin_frist_frame, result_frame, input_file_type
+        ]
+    )
+
+    for it in [result_frame, left_bound, upper_bound, right_bound, buttom_bound]:
         it.change(
             fn=crop_frame,
             inputs=[
@@ -67,18 +95,26 @@ with app:
                 result_frame
             ]
         )
-        
+
     output_btn.click(
         fn=process_video,
         inputs=[
-            input_video, left_bound, upper_bound, right_bound, buttom_bound, output_codec, output_format,
+            input_video, input_img_seq, input_file_type, left_bound, upper_bound, right_bound, buttom_bound, output_codec, output_format,
         ],
         outputs=[
             output_file
-        ]    
+        ]
     )
 
-    
+    clean_btn.click(
+        fn=clean_temp,
+        outputs=[
+            input_file_type, origin_frist_frame
+        ]
+    )
+
+
 if __name__ == "__main__":
     app.queue(concurrency_count=5)
-    app.launch(debug=True, enable_queue=True, share=False)
+    app.launch(debug=True, enable_queue=True, share=False,
+               server_name="0.0.0.0", server_port=10001)
