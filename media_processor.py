@@ -7,9 +7,11 @@ def process_video(input_video, input_img_seq, input_file_type, left, right, top,
     cropped_video_path = ""
 
     if input_file_type == "video":
-        cropped_video_path = crop_video(input_video, left, right, top, bottom, output_codec, output_format, progress)
+        cropped_video_path = crop_video(
+            input_video, left, right, top, bottom, output_codec, output_format, progress)
     if input_file_type == "imgs":
-        cropped_video_path = crop_imgs(input_img_seq, left, right, top, bottom, output_codec, output_format, progress)
+        cropped_video_path = crop_imgs(
+            input_img_seq, left, right, top, bottom, output_codec, output_format, progress)
 
     return cropped_video_path
 
@@ -108,7 +110,8 @@ class OutputVideo:
     def __init__(self, file_name, fps, codec, extension, cropped_width, cropped_height):
         os.makedirs("uploads", exist_ok=True)
         self.output_path = os.path.join("uploads", file_name + extension)
-        self.out = cv2.VideoWriter(self.output_path, get_codec(codec), fps, (cropped_width, cropped_height))
+        self.out = cv2.VideoWriter(self.output_path, get_codec(
+            codec), fps, (cropped_width, cropped_height))
 
     def update(self, frame):
         self.out.write(frame)
@@ -122,12 +125,13 @@ def crop_video(input_video, left, right, top, bottom, codec, extension, progress
     cap = cv2.VideoCapture(input_video)
     frame = cap.read()[1]
     file_name = input_video.split('/')[-1].split('.')[0]
-    
+
     height, width, _ = frame.shape
     left, right = int(left*width), int(right*width)
     top, bottom = int(top*height), int(bottom*height)
     cropped_width, cropped_height = right - left, bottom - top
-    out = OutputVideo(file_name, 30, codec, extension, cropped_width, cropped_height)
+    out = OutputVideo(file_name, 30, codec, extension,
+                      cropped_width, cropped_height)
     num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     for i in range(num):
         cropped_frame = frame[top:bottom, left:right]
@@ -143,20 +147,30 @@ def crop_imgs(input_file, left, right, top, bottom, codec, extension, progress):
     file_path = f'./assets/{input_file.name.split("/")[-1].split(".")[0]}'
     img_paths = sorted([os.path.join(file_path, img_name)
                        for img_name in os.listdir(file_path)])
-    
+
     frame = cv2.cvtColor(cv2.imread(img_paths[0]), cv2.COLOR_BGR2RGB)
-    file_name = input_file.split('/')[-1].split('.')[0]
+
+    file_name = input_file.name.split('/')[-1].split('.')[0]
     height, width, _ = frame.shape
     left, right = int(left*width), int(right*width)
     top, bottom = int(top*height), int(bottom*height)
     cropped_width, cropped_height = right - left, bottom - top
-    out = OutputVideo(file_name, 30, codec, extension, cropped_width, cropped_height)
+    out = OutputVideo(file_name, 30, codec, extension,
+                      cropped_width, cropped_height)
     num = len(img_paths)
     for i in range(num):
-        frame = cv2.cvtColor(cv2.imread(img_paths[i]), cv2.COLOR_BGR2RGB)
+        # frame = cv2.cvtColor(cv2.imread(img_paths[i]), cv2.COLOR_BGR2RGB)
+        frame = cv2.imread(img_paths[i])
         cropped_frame = frame[top:bottom, left:right]
         out.update(cropped_frame)
         if i % 10 == 0:
             progress(i / num, desc="Cropping Video")
-            
+
     return out.finish()
+
+
+def clean_temp():
+    os.system(f'rm -r ./assets/*')
+    os.system(f'rm ./uploads/*')
+
+    return None, None

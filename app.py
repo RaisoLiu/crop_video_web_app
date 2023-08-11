@@ -1,14 +1,7 @@
 import gradio as gr
 import cv2
 import os
-from media_processor import get_meta_from_video, crop_frame, process_video, get_meta_from_img_seq
-
-
-def clean_temp():
-    os.system(f'rm -r ./assets/*')
-    os.system(f'rm ./uploads/*')
-
-    return None, None
+from media_processor import get_meta_from_video, crop_frame, process_video, get_meta_from_img_seq, clean_temp
 
 
 # 定義 Gradio 的介面
