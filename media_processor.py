@@ -82,30 +82,6 @@ def get_codec(codec):
     return codecs.get(codec)
 
 
-# def process_frames(frames, left, right, top, bottom, codec, extension, progress):
-#     # Calculate cropped dimensions
-#     height, width, _ = frames[0].shape
-#     left, right = int(left*width), int(right*width)
-#     top, bottom = int(top*height), int(bottom*height)
-#     cropped_width, cropped_height = right - left, bottom - top
-
-#     # Prepare VideoWriter
-#     os.makedirs("uploads", exist_ok=True)
-#     file_name = frames[0].name.split(
-#         '/')[-1].split('.')[0] if hasattr(frames[0], 'name') else "output"
-#     output_path = os.path.join("uploads", file_name + extension)
-#     out = cv2.VideoWriter(output_path, get_codec(
-#         codec), 30, (cropped_width, cropped_height))
-
-#     # Process frames
-#     for i, frame in enumerate(frames):
-#         cropped_frame = frame[top:bottom, left:right]
-#         out.write(cropped_frame)
-#         if i % 10 == 0:
-#             progress(i / len(frames), desc="Cropping Video")
-#     out.release()
-#     return output_path
-
 class OutputVideo:
     def __init__(self, file_name, fps, codec, extension, cropped_width, cropped_height):
         os.makedirs("uploads", exist_ok=True)
@@ -159,7 +135,6 @@ def crop_imgs(input_file, left, right, top, bottom, codec, extension, progress):
                       cropped_width, cropped_height)
     num = len(img_paths)
     for i in range(num):
-        # frame = cv2.cvtColor(cv2.imread(img_paths[i]), cv2.COLOR_BGR2RGB)
         frame = cv2.imread(img_paths[i])
         cropped_frame = frame[top:bottom, left:right]
         out.update(cropped_frame)

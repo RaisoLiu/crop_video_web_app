@@ -12,10 +12,10 @@ with app:
     input_file_type = gr.State(None)
     gr.Markdown(
         '''
-                <div style="text-align:center;">
-                    <span style="font-size:3em; font-weight:bold;">Crop fix position video</span>
-                </div>
-                '''
+        <div style="text-align:center;">
+            <span style="font-size:3em; font-weight:bold;">Crop fix position video</span>
+        </div>
+        '''
     )
 
     # Front-end
