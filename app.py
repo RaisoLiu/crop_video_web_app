@@ -47,6 +47,7 @@ with app:
                     choices=["MP4V", "AVC1", "FFV1", "MJPG"], label="編碼選擇", value="AVC1", interactive=True)
                 output_format = gr.Dropdown(
                     choices=[".mp4", ".avi"], label="檔案副檔名", value=".mp4", interactive=True)
+            demo_btn = gr.Button("Processing First Frame", interactive=True)
 
         with gr.Column(scale=0.5):
             result_frame = gr.Image(
@@ -78,16 +79,25 @@ with app:
         ]
     )
 
-    for it in [result_frame, left_bound, right_bound, upper_bound, bottom_bound]:
-        it.change(
-            fn=crop_frame,
-            inputs=[
-                origin_frist_frame, left_bound, right_bound, upper_bound, bottom_bound
-            ],
-            outputs=[
-                result_frame
-            ]
-        )
+    # for it in [result_frame, left_bound, right_bound, upper_bound, bottom_bound]:
+    #     it.change(
+    #         fn=crop_frame,
+    #         inputs=[
+    #             origin_frist_frame, left_bound, right_bound, upper_bound, bottom_bound
+    #         ],
+    #         outputs=[
+    #             result_frame
+    #         ]
+    #     )
+    demo_btn.click(
+        fn=crop_frame,
+        inputs=[
+            origin_frist_frame, left_bound, right_bound, upper_bound, bottom_bound
+        ],
+        outputs=[
+            result_frame
+        ]
+    )
 
     output_btn.click(
         fn=process_video,
