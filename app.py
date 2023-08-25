@@ -44,9 +44,9 @@ with app:
                                          value=1., interactive=True)
             with gr.Row():
                 output_codec = gr.Dropdown(
-                    choices=["MP4V", "AVC1", "FFV1", "MJPG"], label="編碼選擇", value="AVC1", interactive=True)
+                    choices=["MP4V", "AVC1", "FFV1", "MJPG"], label="編碼選擇", value="FFV1", interactive=True)
                 output_format = gr.Dropdown(
-                    choices=[".mp4", ".avi"], label="檔案副檔名", value=".mp4", interactive=True)
+                    choices=[".mp4", ".avi"], label="檔案副檔名", value=".avi", interactive=True)
             demo_btn = gr.Button("Processing First Frame", interactive=True)
 
         with gr.Column(scale=0.5):

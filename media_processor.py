@@ -109,12 +109,11 @@ def crop_video(input_video, left, right, top, bottom, codec, extension, progress
     out = OutputVideo(file_name, 30, codec, extension,
                       cropped_width, cropped_height)
     num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    for i in range(num):
+    
+    for i in progress.tqdm(range(num)):
         cropped_frame = frame[top:bottom, left:right]
         out.update(cropped_frame)
         frame = cap.read()[1]
-        if i % 10 == 0:
-            progress(i / num, desc="Cropping Video")
 
     return out.finish()
 
